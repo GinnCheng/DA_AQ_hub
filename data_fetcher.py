@@ -9,13 +9,13 @@ class qld_amns_data_fetcher:
         self.years = years
         self.location = location
 
-    def fetch(self):
+    def fetch(self, print_result=False, output=False):
 
         # Base URL for constructing full download links
         base_url = 'https://www.data.qld.gov.au'
 
         # Initialize a list to store DataFrames
-        df = pd.DataFrame([])
+        self.df = pd.DataFrame([])
 
         for year in self.years:
 
@@ -56,8 +56,9 @@ class qld_amns_data_fetcher:
                             if csv_response.status_code == 200:
                                 # Use StringIO to read the CSV content into a DataFrame
                                 sub_df = pd.read_csv(io.StringIO(csv_response.text))
-                                df = pd.concat([df, sub_df], ignore_index=True)
-                                print(f"Stored CSV from {csv_url} in DataFrame.")
+                                self.df = pd.concat([self.df, sub_df], ignore_index=True)
+                                if print_result == True:
+                                    print(f"Stored CSV from {csv_url} in DataFrame.")
 
                             else:
                                 print(f"Failed to fetch CSV from {csv_url}. Status code: {csv_response.status_code}")
@@ -65,5 +66,14 @@ class qld_amns_data_fetcher:
                         print(f"Failed to retrieve download page. Status code: {download_page_response.status_code}")
             else:
                 print(f"Failed to retrieve the main page. Status code: {response.status_code}")
+        if output == True:
+            return self.df
+        else:
+            return self
 
-        return df
+    def format(self):
+        self.df['Datetime'] = pd.to_datetime(self.df['Date'] + ' ' + self.df['Time'], format='%d/%m/%Y %H:%M')
+        # self.df['Date'] = pd.to_datetime(self.df['Date'], format='%d/%m/%Y')
+        # self.df['Time'] = pd.to_datetime(self.df['Time'], format='%H')
+        # self.df['hour'] = self.df['Time'].str.split(':').str[0]
+        return self.df

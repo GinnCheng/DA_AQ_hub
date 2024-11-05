@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Fetcher</title>
+</head>
+<body>
+    <h1>Fetch Data by Location</h1>
+    <form method="POST">
+        <input type="text" name="location" placeholder="Enter location" required>
+        <button type="submit">Fetch Data</button>
+    </form>
+    {% if data %}
+        <h2>Data for {{ data['Location'][0] }}</h2>
+        <p>Data: {{ data['Data'][0] }}</p>
+    {% endif %}
+</body>
+</html>

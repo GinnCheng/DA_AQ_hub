@@ -199,3 +199,58 @@ class qld_amns_data_fetcher:
             return self.df
         else:
             return self
+
+    def average(self, period='year'):
+        if period == '24hr':
+            df_avg = self.df.groupby(['year', 'month', 'day'])[self.df.select_dtypes(include='float').columns].mean().reset_index()
+            df_avg_yr100 = df_avg.groupby(['year']).max().reset_index()
+            df_avg_yr90 = df_avg.groupby(['year']).quantile(0.90).reset_index()
+
+            # Rename columns of df2 with suffix '_90'
+            df_avg_yr90 = df_avg_yr90[self.df.select_dtypes(include='float').columns].rename(columns=lambda x: f"{x}_90")
+
+            # Merge DataFrames side by side
+            df_avg = pd.concat([df_avg_yr100, df_avg_yr90], axis=1)
+
+            # Interleave the columns
+            # Create the interleaved column order
+            cols = []
+            for col in df_avg_yr100.columns:
+                cols.append(col)
+                cols.append(f"{col}_90")
+            cols = [col for col in cols if (col in df_avg_yr100.columns or col in df_avg_yr90.columns)]
+            # Reorder the merged DataFrame with the new column order
+            df_avg = df_avg[cols]
+
+            return df_avg.round(2)
+
+        elif period == '1hr':
+            df_avg_yr100 = self.df.groupby(['year'])[self.df.select_dtypes(include='float').columns].max().reset_index()
+            df_avg_yr90 = self.df.groupby(['year'])[self.df.select_dtypes(include='float').columns].quantile(0.90).reset_index()
+
+            # Rename columns of df2 with suffix '_90'
+            df_avg_yr90 = df_avg_yr90[self.df.select_dtypes(include='float').columns].rename(columns=lambda x: f"{x}_90")
+
+            # Merge DataFrames side by side
+            df_avg = pd.concat([df_avg_yr100, df_avg_yr90], axis=1)
+
+            # Interleave the columns
+            # Create the interleaved column order
+            cols = []
+            for col in df_avg_yr100.columns:
+                cols.append(col)
+                cols.append(f"{col}_90")
+            cols = [col for col in cols if (col in df_avg_yr100.columns or col in df_avg_yr90.columns)]
+            # Reorder the merged DataFrame with the new column order
+            df_avg = df_avg[cols]
+
+            return df_avg.round(2)
+
+        elif period == 'year':
+
+            df_avg = self.df.groupby(['year'])[self.df.select_dtypes(include='float').columns].mean().reset_index()
+            return df_avg.round(2)
+
+        else:
+            print("period should be one of ('year','24hr','1hr')")
+            return None

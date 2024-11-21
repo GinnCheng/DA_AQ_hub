@@ -419,6 +419,8 @@ class nsw_amns_data_fetcher:
 
         # wrangle the data
         self.df['Datetime'] = pd.to_datetime(self.df['Date'] + ' ' + self.df['Time'], format='%d/%m/%Y %H:%M')
+        self.df.loc[self.df['Time'] == '00:00', 'Datetime'] += pd.Timedelta(days=1)
+        self.df.drop(['Date','Time'], inplace=True)
         self.df['year'] = self.df.Datetime.dt.year
         self.df['month'] = self.df.Datetime.dt.month
         self.df['day'] = self.df.Datetime.dt.day

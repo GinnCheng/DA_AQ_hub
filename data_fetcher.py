@@ -275,14 +275,7 @@ class nsw_amns_data_fetcher:
             self.df = pd.concat([self.df, temp_data], axis=0, join='outer')
         self.df.drop_duplicates(inplace=True)
         # format time
-        self.df['Date'] = pd.to_datetime(self.df['Date'], format='%d/%m/%Y')
         self.df['Time'] = self.df['Time'].replace('24:00', '00:00')
-        self.df['Time'] = pd.to_datetime(self.df['Time'], format='%H:%M')
-        self.df['hour'] = self.df['Time'].dt.hour
-        self.df['year'] = self.df.Date.dt.year
-        self.df['month'] = self.df.Date.dt.month
-
-        return self
 
     # def fetch(self, print_result=False, output=False):
 
@@ -316,7 +309,11 @@ class nsw_amns_data_fetcher:
         }
 
         # Replace column names
-        self.df.columns = [col.replace(old, new) for col in self.df.columns for old, new in replacements.items()]
+        for i, col in enumerate(self.df.columns):
+            for old, new in replacements.items():
+                # Replace the substring in the column name
+                if old in col:
+                    self.df.columns.values[i] = new
 
         ####################################################################################################################################
         ## convert the unit into standard
@@ -382,7 +379,7 @@ class nsw_amns_data_fetcher:
         # create a quantity group
         dust_assess_items_grp = ['NO2', 'SO2', 'PM10', 'PM2.5']
         voc_assess_items_grp = ['Benzene', 'Toluene', 'Xylenes']
-        wind_rose_items_grp = ['wind_dir', 'wind_spd']
+        wind_rose_items_grp = ['wdr', 'wsp']
 
         quantity_dict = {'dust': dust_assess_items_grp, 'voc': voc_assess_items_grp, 'wind': wind_rose_items_grp}
 

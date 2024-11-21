@@ -309,12 +309,17 @@ class nsw_amns_data_fetcher:
         }
 
         # Replace column names
-        for i, col in enumerate(self.df.columns):
+        new_col_names = []
+        for col in self.df.columns:
+            new_col = col  # Start with the original column name
             for old, new in replacements.items():
-                # Replace the substring in the column name
                 if old in col:
-                    self.df.columns.values[i] = new
+                    new_col = new  # Update to the new name
+                    break  # Exit the loop once a match is found
+            new_col_names.append(new_col)  # Add the new name to the list
 
+        # Assign the new column names back to the DataFrame
+        self.df.columns = new_col_names
         ####################################################################################################################################
         ## convert the unit into standard
         # convert the unit for WSP from m/s to km/h
@@ -372,7 +377,6 @@ class nsw_amns_data_fetcher:
             self.df['Fromaldehyde'] = self.df['Fromaldehyde'] * 1.23
         except:
             pass
-
             ############################################################################################################################
 
         # check the columns that need to be included in the wrangled data

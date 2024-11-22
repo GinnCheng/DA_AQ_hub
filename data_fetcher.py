@@ -495,4 +495,42 @@ class nsw_amns_data_fetcher:
             print("period should be one of ('year','24hr','1hr')")
             return None
 
+    def climate(self, select_years = [2019,2020,2021,2022,2023]):
 
+        month_name_dict = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr',
+                           5:'May', 6:'Jun', 7:'Jul', 8:'Aug',
+                           9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec', 0:'annual'}
+
+        df_temp = self.df[['temp', 'year', 'month', 'day', 'hour', 'season']]
+        df_rain = self.df[['rain', 'year', 'month', 'day', 'hour', 'season']]
+
+        df_temp = df_temp[df_temp.year.isin(select_years)]
+        df_rain = df_rain[df_rain.year.isin(select_years)]
+
+        df_temp.dropna(axis=0)
+        df_rain.dropna(axis=0)
+
+        stats_max_temp_month = df_temp.groupby(by=['year', 'month']).temp.max().reset_index().groupby(by='month').mean().T.round(2)
+        stats_max_temp_year = df_temp.groupby(by=['year','month']).temp.max().reset_index().groupby(by='month').mean().mean().T.round(2)
+        stats_max_temp = pd.concat([stats_max_temp_month,stats_max_temp_year],axis=1)
+        stats_max_temp = stats_max_temp.T.drop(columns=['year'])
+        stats_max_temp = stats_max_temp.T
+        stats_max_temp.rename(columns=month_name_dict, inplace=True)
+
+        stats_min_temp_month = df_temp.groupby(by=['year', 'month']).temp.min().reset_index().groupby(by='month').mean().T.round(2)
+        stats_min_temp_year = df_temp.groupby(by=['year', 'month']).temp.min().reset_index().groupby(by='month').mean().mean().T.round(2)
+        stats_min_temp = pd.concat([stats_min_temp_month, stats_min_temp_year], axis=1)
+        stats_min_temp = stats_min_temp.T.drop(columns=['year'])
+        stats_min_temp = stats_min_temp.T
+        stats_min_temp.rename(columns=month_name_dict, inplace=True)
+
+        stats_rain_month = df_rain.groupby(by=['year', 'month']).rain.sum().reset_index().groupby(by='month').mean().T.round(2)
+        stats_rain_year = df_rain.groupby(by=['year']).rain.sum().reset_index().mean().T.round(2)
+        stats_rain = pd.concat([stats_rain_month, stats_rain_year], axis=1)
+        stats_rain = stats_rain.T.drop(columns=['year'])
+        stats_rain = stats_rain.T
+        stats_rain.rename(columns=month_name_dict, inplace=True)
+
+        return stats_max_temp, stats_min_temp, stats_rain
+
+        # df_temp.groupby(by=['year', 'month']).temp.max().reset_index().groupby(by='month').mean().T

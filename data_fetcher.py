@@ -497,6 +497,13 @@ class nsw_amns_data_fetcher:
 
     def climate(self, select_years = [2019,2020,2021,2022,2023]):
 
+        # Function to color the max and min values
+        def highlight_max_min(s):
+            is_max = s == s.max()
+            is_min = s == s.min()
+            return ['color: red' if v else 'color: blue' if m else '' for v, m in
+                    zip(is_max, is_min)]
+
         month_name_dict = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr',
                            5:'May', 6:'Jun', 7:'Jul', 8:'Aug',
                            9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec', 0:'annual'}
@@ -510,17 +517,17 @@ class nsw_amns_data_fetcher:
         df_temp.dropna(axis=0)
         df_rain.dropna(axis=0)
 
-        stats_max_temp_month = df_temp.groupby(by=['year', 'month']).temp.max().reset_index().groupby(by='month').mean().T.round(2)
-        stats_max_temp_year = df_temp.groupby(by=['year','month']).temp.max().reset_index().groupby(by='month').mean().mean().T.round(2)
+        stats_max_temp_month = df_temp.groupby(by=['year', 'month','day']).temp.max().reset_index().groupby(by='month').mean().T.round(2)
+        stats_max_temp_year = df_temp.groupby(by=['year','month','day']).temp.max().reset_index().groupby(by='month').mean().mean().T.round(2)
         stats_max_temp = pd.concat([stats_max_temp_month,stats_max_temp_year],axis=1)
-        stats_max_temp = stats_max_temp.T.drop(columns=['year'])
+        stats_max_temp = stats_max_temp.T.drop(columns=['year','day'])
         stats_max_temp = stats_max_temp.T
         stats_max_temp.rename(columns=month_name_dict, inplace=True)
 
-        stats_min_temp_month = df_temp.groupby(by=['year', 'month']).temp.min().reset_index().groupby(by='month').mean().T.round(2)
-        stats_min_temp_year = df_temp.groupby(by=['year', 'month']).temp.min().reset_index().groupby(by='month').mean().mean().T.round(2)
+        stats_min_temp_month = df_temp.groupby(by=['year', 'month','day']).temp.min().reset_index().groupby(by='month').mean().T.round(2)
+        stats_min_temp_year = df_temp.groupby(by=['year', 'month','day']).temp.min().reset_index().groupby(by='month').mean().mean().T.round(2)
         stats_min_temp = pd.concat([stats_min_temp_month, stats_min_temp_year], axis=1)
-        stats_min_temp = stats_min_temp.T.drop(columns=['year'])
+        stats_min_temp = stats_min_temp.T.drop(columns=['year','day'])
         stats_min_temp = stats_min_temp.T
         stats_min_temp.rename(columns=month_name_dict, inplace=True)
 
@@ -530,6 +537,11 @@ class nsw_amns_data_fetcher:
         stats_rain = stats_rain.T.drop(columns=['year'])
         stats_rain = stats_rain.T
         stats_rain.rename(columns=month_name_dict, inplace=True)
+
+        # Apply the function to the DataFrame
+        stats_max_temp = stats_max_temp.style.apply(highlight_max_min, axis=1,subset=stats_max_temp.columns.difference(['annual'])).format(precision=2)
+        stats_min_temp = stats_min_temp.style.apply(highlight_max_min, subset=stats_min_temp.columns.difference(['annual']), axis=1).format(precision=2)
+        stats_rain = stats_rain.style.apply(highlight_max_min, axis=1, subset=stats_rain.columns.difference(['annual'])).format(precision=2)
 
         return stats_max_temp, stats_min_temp, stats_rain
 
